@@ -1,0 +1,140 @@
+
+        body {
+            font-family: 'UnifrakturMaguntia', cursive;
+            background: #2b2b2b;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(58, 47, 31, 0.8);
+            padding: 20px;
+            border: 5px solid #8a5522;
+            border-radius: 10px;
+        }
+        #reels {
+            display: grid;
+            grid-template-columns: repeat(5, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+            margin: 20px auto;
+            justify-content: center;
+            background: #3a2f1f;
+            padding: 20px;
+        }
+        .reel {
+            width: 100px;
+            height: 100px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            border-radius: 5px;
+            font-size: 40px;
+            position: relative;
+        }
+        .reel.spinning {
+            animation: spinReel 0.1s infinite;
+        }
+        @keyframes spinReel {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        .reel.win {
+            animation: flash 0.5s 3;
+            border-color: #ff0;
+        }
+        @keyframes flash {
+            0% { border-color: #fff; }
+            50% { border-color: #ff0; }
+            100% { border-color: #000; }
+        }
+        #spin-button, #reset-button {
+            padding: 10px 20px;
+            width: 150px;
+            height: 50px;
+            background: #8a5522;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            font-family: 'UnifrakturMaguntia', cursive;
+            font-size: 18px;
+        }
+        #spin-button:hover, #reset-button:hover {
+            background: #a66b33;
+        }
+        #glory-meter {
+            margin: 20px 0;
+            font-size: 24px;
+            background: #3a2f1f;
+            height: 40px;
+            line-height: 40px;
+            position: relative;
+        }
+        #glory-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 40px;
+            background: #8a5522;
+        }
+        #status {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        #trial-container {
+            display: none;
+            margin: 20px 0;
+            background: #3a2f1f;
+            padding: 20px;
+            min-height: 400px;
+            position: relative;
+        }
+        #trial-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+        #trial-header {
+            height: 50px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            font-size: 24px;
+            line-height: 50px;
+        }
+        .enemy, .shield {
+            width: 80px;
+            height: 80px;
+            display: inline-block;
+            margin: 5px;
+            cursor: pointer;
+            position: relative;
+            background: none;
+            z-index: 1;
+            font-size: 40px;
+        }
+        .enemy.defeated, .shield.active {
+            opacity: 0.5;
+        }
+        .weak-point, .attack-point {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            transition: all 0.2s ease;
+            font-size: 20px;
+        }
+   
