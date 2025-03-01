@@ -1,15 +1,35 @@
+// Check if welcome screen has been shown before
+if (!localStorage.getItem('welcomeShown')) {
+    document.getElementById('welcome-screen').style.display = 'flex';
+    document.getElementById('game-container').style.display = 'none';
+} else {
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+}
+
+document.getElementById('start-game').addEventListener('click', () => {
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    localStorage.setItem('welcomeShown', 'true'); // Mark as shown
+});
+
+document.getElementById('how-to-play').addEventListener('click', () => {
+    document.getElementById('welcome-screen').style.display = 'flex';
+    document.getElementById('game-container').style.display = 'none';
+});
+
 const symbolImages = {
-    'Rune': '../graphics/greenRune.png', // Example; adjust based on best fit
-    'Axe': '../graphics/gameIcon0011.png', // Potential match for Axe/Freyr
-    'Thor': '../graphics/Thor.png',
-    'Odin': '../graphics/gameIcon00012.png', // Potential match for Odin/Raven
-    'Valkyrie': '../graphics/Valkyrie.png',
-    'Raven': '../graphics/norselcon.png', // Example; adjust for best raven match
-    'Loki': '../graphics/u0dXpCMiul76Se.png', // Potential match for Loki
-    'Freyr': '../graphics/gameIcon0011.png', // Potential match; adjust if needed
-    'Mjolnir': '../graphics/thors-hammer.png',
-    'Serpent': '../graphics/serpent.png',
-    'Runestone': '../graphics/pinkRune.png' // Example; adjust based on best fit
+    'Rune': '🪨',
+    'Axe': '🪓',
+    'Thor': '⚡',
+    'Odin': '🐦',
+    'Valkyrie': '🛡️',
+    'Raven': '🦅',
+    'Loki': '🐍',
+    'Freyr': '🌾',
+    'Mjolnir': '🔨',
+    'Serpent': '🌊',
+    'Runestone': '🗿'
 };
 let glory = 0;
 let trialActive = false;
@@ -41,22 +61,167 @@ function spinReels() {
         Array.from({ length: 5 }, (_, col) => document.getElementById(`reel-${row}-${col}`))
     ).flat();
 
+    // Reset reels to starting position
+    reels.forEach(reel => {
+        reel.textContent = '';
+        reel.style.opacity = '0';
+        reel.style.transform = 'translateY(-300px)';
+        reel.dataset.symbol = '';
+        reel.classList.remove('falling', 'exploding', 'win'); // Ensure no residual classes
+    });
+
     let spins = 0;
-    reels.forEach(reel => reel.classList.add('spinning'));
     const spinInterval = setInterval(() => {
         reels.forEach(reel => {
             const symbol = weightedRandomSymbol();
-            reel.style.backgroundImage = `url(${symbolImages[symbol]})`;
-            reel.textContent = ''; // Clear any text/emojis
+            reel.textContent = symbolImages[symbol];
             reel.dataset.symbol = symbol;
         });
         spins++;
         if (spins > 10) {
             clearInterval(spinInterval);
-            reels.forEach(reel => reel.classList.remove('spinning'));
-            finishSpin(reels);
+            animateReels(reels, () => cascade(reels, 0));
         }
     }, 100);
+}
+
+function animateReels(reels, callback) {
+    reels.forEach((reel, index) => {
+        // Stagger the animation by 100ms per reel (left to right)
+        setTimeout(() => {
+            reel.style.opacity = '1';
+            reel.classList.add('falling');
+        }, index * 100); // 100ms delay per reel
+
+        // Remove falling class and ensure final position after animation
+        setTimeout(() => {
+            reel.classList.remove('falling');
+            reel.style.transform = 'translateY(0)';
+            reel.style.opacity = '1';
+        }, index * 100 + 800);
+    });
+
+    // Wait for all animations to complete before cascading
+    setTimeout(callback, 1300); // Allow 1.3s for all reels to settle
+}
+
+function cascade(reels, cascadeCount) {
+    if (cascadeCount >= 5) { // Prevent infinite loops
+        endCascade(reels);
+        return;
+    }
+
+    const grid = Array.from({ length: 3 }, (_, row) =>
+        reels.slice(row * 5, (row + 1) * 5).map(reel => reel.dataset.symbol)
+    );
+    const winnings = calculateWinnings(grid);
+    let baseStatus = '';
+
+    if (winnings > 0) {
+        comboStreak++;
+        let totalWinnings = winnings * (freyjaSpins > 0 ? 2 : 1) * (1 + (comboStreak - 1) * 0.5) * multiplier;
+        multiplier = 1;
+        highlightWins(grid, reels);
+        baseStatus = comboStreak > 1 ? `Skål! Combo x${comboStreak}` : 'The Allfather smiles!';
+
+        // Explode winning symbols
+        const winningReels = [];
+        const paylines = [
+            grid[0], grid[1], grid[2],
+            [grid[0][0], grid[1][1], grid[2][2], grid[1][3], grid[0][4]],
+            [grid[2][0], grid[1][1], grid[0][2], grid[1][3], grid[2][4]],
+            [grid[0][0], grid[1][1], grid[2][2], grid[1][3], grid[0][4]],
+            [grid[2][0], grid[1][1], grid[0][2], grid[1][3], grid[2][4]],
+            [grid[1][0], grid[0][1], grid[1][2], grid[2][3], grid[1][4]]
+        ];
+        paylines.forEach(line => {
+            const counts = {};
+            line.forEach(s => counts[s] = (counts[s] || 0) + 1);
+            const wildCount = (counts.Raven || 0) + (counts.Serpent || 0);
+            if (Object.values(counts).some(c => c + wildCount >= 3)) {
+                line.forEach((symbol, i) => {
+                    const row = Math.floor(paylines.indexOf(line) / 3) || [0, 1, 2, 0, 2, 0, 2, 1][paylines.indexOf(line)];
+                    const col = [0, 1, 2, 3, 4].indexOf(i);
+                    if (col !== -1) {
+                        const reelIndex = row * 5 + col;
+                        if (!winningReels.includes(reelIndex)) {
+                            winningReels.push(reelIndex);
+                        }
+                    }
+                });
+            }
+        });
+
+        // Animate explosions
+        winningReels.forEach(index => {
+            const reel = reels[index];
+            reel.classList.add('exploding');
+        });
+
+        // After explosions, refill with new symbols
+        setTimeout(() => {
+            winningReels.forEach(index => {
+                const reel = reels[index];
+                const row = Math.floor(index / 5);
+                const col = index % 5;
+                const symbol = weightedRandomSymbol();
+                reel.textContent = symbolImages[symbol];
+                reel.dataset.symbol = symbol;
+                reel.classList.remove('exploding');
+                reel.classList.add('falling');
+            });
+
+            // Wait for falls to complete, then check for more wins
+            setTimeout(() => {
+                winningReels.forEach(index => {
+                    const reel = reels[index];
+                    reel.classList.remove('falling');
+                    reel.style.transform = 'translateY(0)';
+                    reel.style.opacity = '1';
+                });
+                cascade(reels, cascadeCount + 1);
+            }, 800); // Match fallAndBounce duration
+
+        }, 500); // Match explode duration
+
+        glory += totalWinnings;
+        updateGloryMeter();
+        if (baseStatus) statusText.textContent = baseStatus; // Only update if there's a message
+
+    } else {
+        endCascade(reels);
+    }
+
+    const lokiCount = reels.filter(reel => reel.dataset.symbol === 'Loki').length;
+    if (lokiCount >= 1 && winnings > 0) glory = applyLokiTrickery(glory);
+
+    const freyrCount = reels.filter(reel => reel.dataset.symbol === 'Freyr').length;
+    if (freyrCount >= 3) {
+        freyjaSpins += freyjaSpins > 0 ? 2 : 2;
+        statusText.textContent += ' | Freyr’s Bounty: +2 spins!';
+    }
+
+    const mjolnirCount = reels.filter(reel => reel.dataset.symbol === 'Mjolnir').length;
+    let freeSpin = false;
+    if (mjolnirCount >= 3) {
+        freeSpin = true;
+        statusText.textContent += ' | Mjolnir strikes: Free Spin!';
+    }
+
+    const valkyrieCount = reels.filter(reel => reel.dataset.symbol === 'Valkyrie').length;
+    if (valkyrieCount >= 3) {
+        startValkyrieTrial();
+    }
+}
+
+function endCascade(reels) {
+    if (freyjaSpins > 0) freyjaSpins--;
+    spinButton.disabled = false;
+
+    const mjolnirCount = reels.filter(reel => reel.dataset.symbol === 'Mjolnir').length;
+    if (mjolnirCount >= 3) {
+        setTimeout(spinReels, 1000); // Trigger free spin after cascade ends
+    }
 }
 
 function weightedRandomSymbol() {
@@ -73,81 +238,6 @@ function weightedRandomSymbol() {
         sum += weights[symbol];
         if (rand <= sum) return symbol;
     }
-}
-
-function finishSpin(reels) {
-    const grid = Array.from({ length: 3 }, (_, row) =>
-        reels.slice(row * 5, (row + 1) * 5).map(reel => reel.dataset.symbol)
-    );
-    let winnings = calculateWinnings(grid);
-    let baseStatus = '';
-    if (winnings > 0) {
-        comboStreak++;
-        winnings *= (freyjaSpins > 0 ? 2 : 1) * (1 + (comboStreak - 1) * 0.5) * multiplier;
-        multiplier = 1;
-        highlightWins(grid, reels);
-        baseStatus = comboStreak > 1 ? `Skål! Combo x${comboStreak}` : 'The Allfather smiles!';
-    } else {
-        multiplier = Math.min(multiplier + 1, 5);
-        comboStreak = 0;
-        baseStatus = `Spin again! Multiplier: ${multiplier}x`;
-    }
-
-    const lokiCount = reels.filter(reel => reel.dataset.symbol === 'Loki').length;
-    if (lokiCount >= 1) winnings = applyLokiTrickery(winnings);
-
-    const freyrCount = reels.filter(reel => reel.dataset.symbol === 'Freyr').length;
-    if (freyrCount >= 3) {
-        freyjaSpins += freyjaSpins > 0 ? 2 : 2;
-        baseStatus += ' | Freyr’s Bounty: +2 spins!';
-    }
-
-    const mjolnirCount = reels.filter(reel => reel.dataset.symbol === 'Mjolnir').length;
-    let freeSpin = false;
-    if (mjolnirCount >= 3) {
-        freeSpin = true;
-        baseStatus += ' | Mjolnir strikes: Free Spin!';
-    }
-
-    glory += winnings;
-    updateGloryMeter();
-    statusText.textContent = baseStatus;
-
-    const valkyrieCount = reels.filter(reel => reel.dataset.symbol === 'Valkyrie').length;
-    if (valkyrieCount >= 3) {
-        startValkyrieTrial();
-    } else {
-        if (freyjaSpins > 0) freyjaSpins--;
-        spinButton.disabled = false;
-        if (freeSpin) setTimeout(spinReels, 1000);
-    }
-    setTimeout(() => reels.forEach(reel => reel.classList.remove('win')), 1500);
-}
-
-function calculateWinnings(grid) {
-    let base = 0;
-    const paylines = [
-        grid[0], grid[1], grid[2],
-        [grid[0][0], grid[1][1], grid[2][2], grid[1][3], grid[0][4]],
-        [grid[2][0], grid[1][1], grid[0][2], grid[1][3], grid[2][4]],
-        [grid[0][0], grid[1][1], grid[2][2], grid[1][3], grid[0][4]],
-        [grid[2][0], grid[1][1], grid[0][2], grid[1][3], grid[2][4]],
-        [grid[1][0], grid[0][1], grid[1][2], grid[2][3], grid[1][4]]
-    ];
-    paylines.forEach(line => {
-        const counts = {};
-        line.forEach(s => counts[s] = (counts[s] || 0) + 1);
-        const wildCount = (counts.Raven || 0) + (counts.Serpent || 0);
-        if ((counts.Rune || 0) + wildCount >= 3) base += 50;
-        if ((counts.Axe || 0) + wildCount >= 3) base += 100;
-        if ((counts.Thor || 0) + wildCount >= 3) base += 200;
-        if ((counts.Odin || 0) + wildCount >= 3) base += 300;
-        if ((counts.Freyr || 0) + wildCount >= 3) base += 150;
-        if ((counts.Mjolnir || 0) + wildCount >= 3) base += 250;
-        if ((counts.Runestone || 0) + wildCount >= 3) base += 40;
-        if (counts.Odin === 5) base += 1000; // Ragnarok Jackpot
-    });
-    return base;
 }
 
 function highlightWins(grid, reels) {
@@ -218,12 +308,10 @@ function startValkyrieTrial() {
     for (let i = 0; i < enemyCount; i++) {
         const enemy = document.createElement('div');
         enemy.className = 'enemy';
-        enemy.style.backgroundImage = 'none'; // Clear any graphic
-        enemy.textContent = '👹'; // Placeholder until enemy_idle.png
+        enemy.textContent = '👹'; // Emoji for enemy
         const weakPoint = document.createElement('div');
         weakPoint.className = 'weak-point';
-        weakPoint.style.backgroundImage = 'none'; // Clear any graphic
-        weakPoint.textContent = '✨'; // Placeholder until weak_point.png
+        weakPoint.textContent = '✨'; // Emoji for weak point
         enemy.appendChild(weakPoint);
         enemiesDiv.appendChild(enemy);
 
@@ -268,12 +356,10 @@ function startShieldWall(hits) {
     for (let i = 0; i < shieldCount; i++) {
         const shield = document.createElement('div');
         shield.className = 'shield';
-        shield.style.backgroundImage = 'none'; // Clear any graphic
-        shield.textContent = '🛡️'; // Placeholder until shield_idle.png
+        shield.textContent = '🛡️'; // Emoji for shield
         const attackPoint = document.createElement('div');
         attackPoint.className = 'attack-point';
-        attackPoint.style.backgroundImage = 'none'; // Clear any graphic
-        attackPoint.textContent = '🔥'; // Placeholder until attack_point.png
+        attackPoint.textContent = '🔥'; // Emoji for attack point
         shield.appendChild(attackPoint);
         shieldsDiv.appendChild(shield);
 

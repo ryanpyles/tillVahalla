@@ -8,6 +8,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <h1>Welcome to Til Valhalla!</h1>
+            <p>Embark on a Norse odyssey in this epic cascading slot game! Spin the 3x5 grid to gather Glory, battle in Valkyrie’s Trial, and prove your worth to reach Valhalla. Match symbols on paylines to win, watch winning symbols explode, and new symbols cascade down until no more wins occur. Trigger special effects and face skill-based challenges.</p>
+            <h2>Paytable</h2>
+            <table class="paytable">
+                <tr><th>Symbol</th><th>3+ Payout (Glory)</th><th>5 Odins (Ragnarok)</th><th>Special Effect</th></tr>
+                <tr><td>Rune (🪨) / Runestone (🗿)</td><td>50 / 40</td><td>-</td><td>-</td></tr>
+                <tr><td>Axe (🪓)</td><td>100</td><td>-</td><td>-</td></tr>
+                <tr><td>Thor (⚡)</td><td>200</td><td>-</td><td>-</td></tr>
+                <tr><td>Odin (🐦)</td><td>300</td><td>1,000</td><td>-</td></tr>
+                <tr><td>Valkyrie (🛡️)</td><td>-</td><td>-</td><td>Triggers Valkyrie’s Trial (2 phases)</td></tr>
+                <tr><td>Raven (🦅) / Serpent (🌊)</td><td>-</td><td>-</td><td>Wild (substitutes for any symbol except Valkyrie)</td></tr>
+                <tr><td>Loki (🐍)</td><td>-</td><td>-</td><td>Trickery: Reshuffles (+50), Doubles, or Halves winnings</td></tr>
+                <tr><td>Freyr (🌾)</td><td>150</td><td>-</td><td>Extends Freyja’s Blessing (+2 spins) or grants 2 spins</td></tr>
+                <tr><td>Mjolnir (🔨)</td><td>250</td><td>-</td><td>Triggers a free spin</td></tr>
+            </table>
+            <button id="start-game">Start Game</button>
+        </div>
+    </div>
+
     <div id="game-container">
         <h1>Til Valhalla</h1>
         <div id="reels">
@@ -29,6 +50,7 @@
         </div>
         <button id="spin-button">Spin ⚡</button>
         <button id="reset-button">Reset 🌀</button>
+        <button id="how-to-play">How to Play</button>
         <div id="glory-meter">Glory: <span id="glory-value">0</span>
             <div id="glory-fill" style="width: 0%;"></div>
         </div>

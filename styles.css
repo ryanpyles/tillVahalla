@@ -1,11 +1,96 @@
 body {
     font-family: 'UnifrakturMaguntia', cursive;
-    background: url('../graphics/background.png') no-repeat center center fixed;
-    background-size: cover;
+    background: #2b2b2b; /* Fallback solid color; remove graphic */
     color: #fff;
     text-align: center;
     margin: 0;
     padding: 20px;
+    overflow: hidden; /* Prevent scrolling during welcome screen */
+}
+
+#welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.welcome-content {
+    background: rgba(58, 47, 31, 0.9);
+    padding: 20px;
+    border: 5px solid #8a5522;
+    border-radius: 10px;
+    max-width: 600px;
+    text-align: left;
+    color: #fff;
+}
+
+.welcome-content h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.welcome-content p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.paytable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.paytable th, .paytable td {
+    border: 1px solid #8a5522;
+    padding: 8px;
+    text-align: center;
+}
+
+.paytable th {
+    background: #3a2f1f;
+    font-weight: bold;
+}
+
+.paytable td {
+    background: #2b2b2b;
+}
+
+#start-game {
+    padding: 10px 20px;
+    background: #8a5522;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+#start-game:hover {
+    background: #a66b33;
+}
+
+#how-to-play {
+    padding: 10px 20px;
+    background: #8a5522;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 18px;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+#how-to-play:hover {
+    background: #a66b33;
 }
 
 #game-container {
@@ -15,6 +100,7 @@ body {
     padding: 20px;
     border: 5px solid #8a5522;
     border-radius: 10px;
+    display: none; /* Hidden until welcome screen is dismissed */
 }
 
 #reels {
@@ -24,9 +110,9 @@ body {
     gap: 10px;
     margin: 20px auto;
     justify-content: center;
-    background: url('../graphics/reelFrame.png') no-repeat center;
-    background-size: 600px 400px;
+    background: #3a2f1f; /* Fallback solid color; remove graphic */
     padding: 20px;
+    position: relative; /* Ensure reels are positioned relative to this */
 }
 
 .reel {
@@ -39,19 +125,48 @@ body {
     border: 2px solid #000;
     border-radius: 5px;
     position: relative;
-    background-size: 80px 80px; /* Resize symbols to fit */
-    background-repeat: no-repeat;
-    background-position: center;
+    font-size: 40px; /* For emojis */
+    transform: translateY(0); /* Ensure final position is at 0 */
+    opacity: 1; /* Ensure visibility after fall */
+    overflow: hidden; /* Prevent symbols from clipping during animation */
 }
 
-.reel.spinning {
-    animation: spinReel 0.1s infinite;
+.reel.falling {
+    animation: fallAndBounce 0.8s ease-out forwards;
 }
 
-@keyframes spinReel {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0); }
+.reel.exploding {
+    animation: explode 0.5s ease-out forwards;
+}
+
+@keyframes fallAndBounce {
+    0% {
+        transform: translateY(-300px); /* Increased from -200px to ensure full drop */
+        opacity: 0;
+    }
+    70% {
+        transform: translateY(20px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes explode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
 }
 
 .reel.win {
@@ -69,41 +184,26 @@ body {
     padding: 10px 20px;
     width: 150px;
     height: 50px;
-    background: url('../graphics/spinButton.png') no-repeat center;
-    background-size: 150px 50px; /* Resize to match button size */
+    background: #8a5522;
     color: #fff;
     border: none;
     cursor: pointer;
     margin: 5px;
     font-family: 'UnifrakturMaguntia', cursive;
     font-size: 18px;
-    text-indent: -9999px; /* Hide text while showing image */
 }
 
-#spin-button:hover {
-    background: #a66b33 url('../graphics/spinButton.png') no-repeat center;
-    background-size: 150px 50px;
-}
-
-#reset-button, #reset-button:hover {
-    background: #8a5522; /* Fallback color for missing reset button graphics */
-    color: #fff;
-    text-indent: 0; /* Show text for now */
-}
-
-#reset-button:hover {
+#spin-button:hover, #reset-button:hover {
     background: #a66b33;
 }
 
 #glory-meter {
     margin: 20px 0;
     font-size: 24px;
-    background: #3a2f1f; /* Fallback until glory_meter.png */
+    background: #3a2f1f;
     height: 40px;
     line-height: 40px;
     position: relative;
-    background-size: 300px 40px; /* Resize if graphic added */
-    background-repeat: no-repeat;
 }
 
 #glory-fill {
@@ -111,8 +211,7 @@ body {
     top: 0;
     left: 0;
     height: 40px;
-    background: #8a5522; /* Fallback until glory_fill.png */
-    background-size: 300px 40px; /* Resize if graphic added */
+    background: #8a5522;
 }
 
 #status {
@@ -123,8 +222,7 @@ body {
 #trial-container {
     display: none;
     margin: 20px 0;
-    background: url('../graphics/battlefield.png') no-repeat center;
-    background-size: 800px 400px; /* Resize battlefield */
+    background: #3a2f1f;
     padding: 20px;
     min-height: 400px;
     position: relative;
@@ -148,9 +246,7 @@ body {
     z-index: 1;
     font-size: 24px;
     line-height: 50px;
-    background: #3a2f1f; /* Fallback until trial_header.png */
-    background-size: 300px 50px; /* Resize if graphic added */
-    background-repeat: no-repeat;
+    background: #3a2f1f;
 }
 
 .enemy, .shield {
@@ -162,10 +258,7 @@ body {
     position: relative;
     background: none;
     z-index: 1;
-    font-size: 40px; /* For emojis; will be removed with graphics */
-    background-size: 80px 80px; /* Resize if graphics added */
-    background-repeat: no-repeat;
-    background-position: center;
+    font-size: 40px; /* For emojis */
 }
 
 .enemy.defeated, .shield.active {
@@ -179,10 +272,7 @@ body {
     top: 30px;
     left: 30px;
     transition: all 0.2s ease;
-    font-size: 20px; /* For emojis; will be removed with graphics */
-    background-size: 20px 20px; /* Resize if graphics added */
-    background-repeat: no-repeat;
-    background-position: center;
+    font-size: 20px; /* For emojis */
 }
 
 #shields {
